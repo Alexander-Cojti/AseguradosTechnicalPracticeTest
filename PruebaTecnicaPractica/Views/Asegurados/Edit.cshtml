@@ -1,0 +1,106 @@
+﻿@model PruebaTecnicaPractica.Models.t_asegurados
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<form asp-action="Edit" class="row gy-2 gx-5 align-items-center">
+    <div class="row mb-3">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <input type="hidden" asp-for="Id" />
+        <div class="col-auto">
+            <label asp-for="Nombre" class="control-label"></label>
+            <input asp-for="Nombre" class="form-control" />
+            <span asp-validation-for="Nombre" class="text-danger"></span>
+        </div>
+        <div class="col-auto">
+            <label asp-for="Apellidos" class="control-label"></label>
+            <input asp-for="Apellidos" class="form-control" />
+            <span asp-validation-for="Apellidos" class="text-danger"></span>
+        </div>
+        <div class="col-auto">
+            <label asp-for="Fecha_de_nacimiento" class="control-label"></label>
+            <input id="fechaNacimiento" asp-for="Fecha_de_nacimiento" class="form-control" />
+            <span asp-validation-for="Fecha_de_nacimiento" class="text-danger"></span>
+        </div>
+        <div class="col-auto">
+            <label asp-for="Edad" class="control-label"></label>
+            <input id="edad" asp-for="Edad" class="form-control" />
+            <span asp-validation-for="Edad" class="text-danger"></span>
+        </div>
+        <div class="col-auto">
+            <label asp-for="Estado_civil" class="font-weight-bold"></label>
+            @Html.DropDownListFor(x => x.Estado_civil, (SelectList)ViewBag.CatalogoEstadoCivil, new { @class = "form-control", @id = "selectEstadoCivil" })
+            @**@
+            <span id="spanEstadoCivil" asp-validation-for="Estado_civil" class="text-danger"></span>
+        </div>
+        <div class="row mt-3">
+            <div class="col-auto">
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+            <div class="col-auto">
+                <input type="submit" value="Guardar" class="btn btn-outline-primary" />
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+<script>
+
+        $(function () {
+            $("#fechaNacimiento").change(function () {
+                              $.ajax({
+                    "url": "@Url.Content("~/Asegurados/CalcularEdadPorFecha")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data : { fecha: $(this).val() },
+                    success: function (data) {
+                        console.log(data);
+                        $("#edad").val(data.edad);
+                        if (parseInt(data.edad) < 18) {
+                            $("#selectEstadoCivil").val('');
+                        }
+                    },
+                    error: function (response) {
+                        console.log(response.responseText);
+                    }
+                });
+            });
+        });
+         $(function () {
+             $("#edad").change(function () {
+                 let edad = parseInt($(this).val());
+                $.ajax({
+                    "url": "@Url.Content("~/Asegurados/CalcularFechaNacimientoPorEdad")",
+                    "type": "POST",
+                    "datatype": "json",
+                    data : { edad: $(this).val() },
+                    success: function (data) {
+                        $("#fechaNacimiento").val(data.fechaNacimiento);
+                        if (edad<18) {
+                            $("#selectEstadoCivil").val('');
+                        }
+                    },
+                    error: function (response) {
+                        console.log(response.responseText);
+                    }
+                });
+            });
+         });
+
+        $(function () {
+            $(document).ready(function () {
+                $("#selectEstadoCivil").change(function () {
+                    var selectEstadoCivil = $('#selectEstadoCivil :selected').text().toLowerCase();
+                    console.log(selectEstadoCivil);
+                    var EdadValidacion = $("#edad").val();
+                    if (EdadValidacion < 18 && (selectEstadoCivil == "casado" || selectEstadoCivil == "viudo" || selectEstadoCivil == "divorciado")) {
+                        $("#selectEstadoCivil").val('')
+                    }
+                });
+            });
+        });
+</script>
+}
